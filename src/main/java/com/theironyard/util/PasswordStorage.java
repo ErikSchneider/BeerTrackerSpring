@@ -1,4 +1,4 @@
-package com.theironyard;
+package com.theironyard.util;
 
 import java.security.SecureRandom;
 import javax.crypto.spec.PBEKeySpec;
@@ -10,6 +10,8 @@ import javax.xml.bind.DatatypeConverter;
 
 public class PasswordStorage
 {
+
+
 
     @SuppressWarnings("serial")
     static public class InvalidHashException extends Exception {

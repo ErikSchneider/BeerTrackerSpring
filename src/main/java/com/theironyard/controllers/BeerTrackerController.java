@@ -4,10 +4,12 @@ import com.theironyard.entities.Beer;
 import com.theironyard.entities.User;
 import com.theironyard.services.BeerRepository;
 import com.theironyard.services.UserRepository;
+import com.theironyard.util.PasswordStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpSession;
@@ -26,7 +28,7 @@ public class BeerTrackerController {
     UserRepository users;
 
     @PostConstruct
-    public void init() throws InvalidKeySpecException, NoSuchAlgorithmException {
+    public void init() throws InvalidKeySpecException, NoSuchAlgorithmException, PasswordStorage.CannotPerformOperationException {
         User user = users.findOneByName("Zach");
         if (user == null) {
             user = new User();
@@ -36,7 +38,7 @@ public class BeerTrackerController {
         }
     }
 
-    @RequestMapping("/")
+    @RequestMapping(path = "/", method = RequestMethod.GET)
     public String home(
             HttpSession session,
             Model model,
@@ -46,7 +48,7 @@ public class BeerTrackerController {
     ) {
         String username = (String) session.getAttribute("username");
 
-        if (username == null); {
+        if (username == null) {
             return "login";
         }
 
@@ -65,7 +67,7 @@ public class BeerTrackerController {
         return "home";
     }
 
-    @RequestMapping("/add-beer")
+    @RequestMapping(path = "/add-beer", method = RequestMethod.POST)
     public String addBeer(String beername, String beertype, int beercalories, HttpSession session) throws Exception {
         String username = (String) session.getAttribute("username");
         if (username == null) {
@@ -83,7 +85,7 @@ public class BeerTrackerController {
         return "redirect:/";
     }
 
-    @RequestMapping("/edit-beer")
+    @RequestMapping(path = "/edit-beer", method = RequestMethod.POST)
     public String editBeer(int id, String name, String type, HttpSession session) throws Exception {
         if (session.getAttribute("username") == null) {
             throw new Exception("Not logged in.");
@@ -95,7 +97,7 @@ public class BeerTrackerController {
         return "redirect:/";
     }
 
-    @RequestMapping("/login")
+    @RequestMapping(path = "/login", method = RequestMethod.POST)
     public String login(String username, String password, HttpSession session) throws Exception {
         session.setAttribute("username", username);
 
@@ -106,15 +108,16 @@ public class BeerTrackerController {
             user.password = PasswordStorage.createHash(password);
             users.save(user);
         }
-        else if (!PasswordStorage.validatePassword(user.password, password)) {
+        else if (!PasswordStorage.verifyPassword(password, user.password)) {
             throw new Exception("Wrong password");
         }
 
         return "redirect:/";
     }
 
-    @RequestMapping("/logout")
+    @RequestMapping(path = "/logout", method = RequestMethod.POST)
     public String logout(HttpSession session) {
+        session.invalidate();
         return "redirect:/";
     }
 }
